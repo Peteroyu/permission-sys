@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://124.220.96.27/ssm_crud
+    username: peter
+    password: mysqlxmj123
+mybatis:
+  type-aliases-package: com.xmj.entity
+pagehelper:
+  reasonable: true
+  helper-dialect: mysql

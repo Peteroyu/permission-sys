@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xmj.mapper.DepartmentMapper">
+    <resultMap id="myDept" type="com.xmj.entity.Department">
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <result property="intro" column="intro"></result>
+        <result property="createDate" column="create_date"></result>
+        <result property="updateDate" column="update_date"></result>
+        <result property="path" column="path"></result>
+        <result property="state" column="state"></result>
+        <collection property="child"></collection>
+        <association property="parent" javaType="department">
+            <id column="parent_id" property="id"></id>
+            <result column="p_name" property="name"></result>
+        </association>
+        <association property="manager" javaType="employee">
+            <id column="e_id" property="id"></id>
+            <result column="e_username" property="username"></result>
+        </association>
+    </resultMap>
+    <insert id="insertOne" parameterType="department">
+        insert into t_org_department(`name`, `intro`, `create_date`, `update_date`, `manager_id`, `parent_id`,`path`,`state`)
+        values (#{name}, #{intro}, SYSDATE(), SYSDATE(), #{manager.id}, #{parent.id},#{path},#{state});
+    </insert>
+    <update id="update" parameterType="department">
+        update t_org_department
+        <set>
+            <if test="name != null and name !=''">
+                name = #{name},
+            </if>
+            <if test="intro != null and intro !=''">
+                intro = #{intro},
+            </if>
+            <if test="updateDate != null">
+                `update_date` = SYSDATE(),
+            </if>
+            <if test="manager != null and manager.id != null and manager.id != ''">
+                manager_id = #{manager.id},
+            </if>
+            <if test="parent != null and parent.id != null and parent.id != ''">
+                parent_id = #{parent.id},
+            </if>
+            <if test="state != null and state != ''">
+                `state` = #{state},
+            </if>
+            <if test="path != null and path != ''">
+                `path` = #{path},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="deleteById">
+        delete
+        from t_org_department
+        where id
+        in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="queryAll" resultMap="myDept">
+        select d1.`id`,
+        d1.`name`,
+        d1.`intro`,
+        d1.`create_date`,
+        d1.`update_date`,
+        d1.`manager_id`,
+        d1.`parent_id`,
+        d1.`path`,
+        d1.`state`,
+        d2.`name` `p_name`,
+        e.id e_id,
+        e.username e_username
+        from t_org_department d1
+        left join t_org_department d2 on d1.`parent_id` = d2.`id`
+        left join t_org_employee e on d1.manager_id = e.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                d1.`name` like CONCAT('%',#{keyword},'%')
+                or d1.`intro` like CONCAT('%',#{keyword},'%')
+                or e.`username` like CONCAT('%',#{keyword},'%')
+                or d2.`name` like CONCAT('%',#{keyword},'%')
+            </if>
+        </where>
+    </select>
+    <select id="queryById" resultMap="myDept" parameterType="string">
+        select
+        d1.`id`,
+        d1.`name`,
+        d1.`intro`,
+        d1.`create_date`,
+        d1.`update_date`,
+        d1.`manager_id`,
+        d1.`parent_id`,
+        d1.`path`,
+        d1.`state`,
+        d2.`name` `p_name`,
+        e.id e_id,
+        e.username e_username
+        from t_org_department d1
+        left join t_org_department d2 on d1.`parent_id` = d2.`id`
+        left join t_org_employee e on d1.manager_id = e.id
+        where d1.`id` = #{id}
+    </select>
+
+
+    <select id="queryDeptTree" resultMap="myDept">
+        select d1.`id`,
+               d1.`name`,
+               d2.`id` `c_id`,
+               d2.`name` `c_name`
+        from t_org_department d1
+                 left join t_org_department d2 on d1.`id` = d2.`parent_id`
+        where d1.parent_id is null
+    </select>
+</mapper>
